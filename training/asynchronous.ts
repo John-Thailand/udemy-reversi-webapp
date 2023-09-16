@@ -3,13 +3,10 @@ import util from 'util'
 
 const promisifyReadFile = util.promisify(fs.readFile)
 
-function main() {
-    const readFilePromise = promisifyReadFile('package.json')
-
-    readFilePromise.then((data) => {
-        const fileContent = data.toString()
-        console.log(fileContent)
-    })
+async function main() {
+    const data = await promisifyReadFile('package.json')
+    const fileContent = data.toString()
+    console.log(fileContent)
 }
 
 main()
