@@ -4,8 +4,7 @@ const LIGHT = 2
 
 const boardElement = document.getElementById('board')
 
-async function showBoard() {
-    const turnCount = 0
+async function showBoard(turnCount) {
     const response = await fetch(`/api/games/latest/turns/${turnCount}`)
     const responseBody = await response.json()
     const board = responseBody.board
@@ -34,6 +33,7 @@ async function showBoard() {
                 squareElement.addEventListener('click', async () => {
                     const nextTurnCount = turnCount + 1
                     await registerTurn(nextTurnCount, nextDisc, x, y)
+                    await showBoard(nextTurnCount)
                 })
             }
 
@@ -69,7 +69,7 @@ async function registerTurn(turnCount, disc, x, y) {
 
 async function main() {
     await registerGame()
-    await showBoard()
+    await showBoard(0)
 }
 
 main()
