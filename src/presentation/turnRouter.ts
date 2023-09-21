@@ -11,28 +11,51 @@ export const turnRouter = express.Router()
 
 const turnService = new TurnService()
 
+interface TurnGetResponseBody {
+    turnCount: number
+    board: number[][]
+    nextDisc: number | null
+    winnerDisc: number | null
+}
+
 // 各RouterはPresentation層に該当する
 // Presentation層の役割はこのアプリケーションの利用者とやり取りすること
 // 例：リクエストからパラメータを取り出したり、レスポンスを返すこと
-turnRouter.get('/api/games/latest/turns/:turnCount', async (req, res) => {
+turnRouter.get('/api/games/latest/turns/:turnCount', async (req, res: express.Response<TurnGetResponseBody>) => {
     // リクエストからパラメータを取り出す
     const turnCount = parseInt(req.params.turnCount)
 
     const output = await turnService.findLatestGameTurnByTurnCount(turnCount)
 
+    const responseBody = {
+        turnCount: output.turnCount,
+        board: output.board,
+        nextDisc: output.nextDisc ?? null,
+        winnerDisc: output.winnerDisc ?? null
+    }
+
     // レスポンスを返す
-    res.json(output)
+    res.json(responseBody)
 })
+
+interface TurnPostRequestBody {
+    turnCount: number
+    move: {
+        disc: number
+        x: number
+        y: number
+    }
+}
 
 // 各RouterはPresentation層に該当する
 // Presentation層の役割はこのアプリケーションの利用者とやり取りすること
 // 例：リクエストからパラメータを取り出したり、レスポンスを返すこと
-turnRouter.post('/api/games/latest/turns', async (req, res) => {
+turnRouter.post('/api/games/latest/turns', async (req: express.Request<{}, {}, TurnPostRequestBody>, res) => {
     // リクエストからパラメータを取り出す
-    const turnCount = parseInt(req.body.turnCount)
-    const disc = parseInt(req.body.move.disc)
-    const x = parseInt(req.body.move.x)
-    const y = parseInt(req.body.move.y)
+    const turnCount = req.body.turnCount
+    const disc = req.body.move.disc
+    const x = req.body.move.x
+    const y = req.body.move.y
 
     await turnService.registerTurn(turnCount, disc, x, y)
 
