@@ -1,9 +1,10 @@
-import { GameGateway } from '../dataaccess/gameGateway'
 import { connectMySQL } from '../dataaccess/connection'
-import { TurnRepository } from '../domain/turnRepository'
-import { firstTurn } from '../domain/turn'
+import { TurnRepository } from '../domain/turn/turnRepository'
+import { firstTurn } from '../domain/turn/turn'
+import { GameRepository } from '../domain/game/gameRepository'
+import { Game } from '../domain/game/game'
 
-const gameGateway = new GameGateway()
+const gameRepository = new GameRepository()
 const turnRepository = new TurnRepository()
 
 export class GameService {
@@ -15,12 +16,15 @@ export class GameService {
             await conn.beginTransaction()
 
             // ゲームを保存する
-            const gameRecord = await gameGateway.insert(conn, now)
+            const game = await gameRepository.save(conn, new Game(undefined, now))
+            if (!game.id) {
+                throw new Error('game.id not exist')
+            }
 
             // 最初のターンをドメインモデルで生成する
             // 最初のターンとういう現実でも起こっていることを、
             // TurnやBoardドメインモデルで実現している
-            const turn = firstTurn(gameRecord.id, now)
+            const turn = firstTurn(game.id, now)
 
             // 最初のターンを保存する
             await turnRepository.save(conn, turn)
