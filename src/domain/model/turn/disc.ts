@@ -1,3 +1,5 @@
+import { DomainError } from "../../error/domainError"
+
 export const Disc =  {
     Empty: 0,
     Dark: 1,
@@ -7,7 +9,12 @@ export const Disc =  {
 
 export type Disc = typeof Disc[keyof typeof Disc]
 
-export function toDisc(value: number): Disc {
+export function toDisc(value: any): Disc {
+    // ポイント：バリデーションをDomainモデルのメソッドを実装して、Presentation層でそのメソッドを呼び出している
+    if (!Object.values(Disc).includes(value)) {
+        throw new DomainError('InvalidDiscValue', 'Invalid disc value')
+    }
+
     return value as Disc
 }
 
