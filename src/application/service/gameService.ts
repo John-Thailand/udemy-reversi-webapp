@@ -1,13 +1,24 @@
 import { connectMySQL } from '../../infrastructure/connection'
 import { firstTurn } from '../../domain/model/turn/turn'
 import { Game } from '../../domain/model/game/game'
-import { GameMySQLRepository } from '../../infrastructure/repository/game/gameMySQLRepository'
-import { TurnMySQLRepository } from '../../infrastructure/repository/turn/turnMySQLRepository'
+import { GameRepository } from '../../domain/model/game/gameRepository'
+import { TurnRepository } from '../../infrastructure/repository/turn/turnRepository'
 
-const gameRepository = new GameMySQLRepository()
-const turnRepository = new TurnMySQLRepository()
+// GameServiceでドメイン層のGameRepositoryとTurnRepositoryのDIを行なっている
+// これでGameMySQLRepositoryやTurnMySQLRepositoryなどのインタフェース層に依存しなくてよい
+
+// サービスクラスはユースケース（処理の流れ）を実現するものであり、下記のようなコードは
+// インフラ層のどのデータベースのテーブルにアクセスするかを定義したものであるので、
+// 下記のコードをサービスクラスに記載するべきではない
+// const gameRepository = new GameMySQLRepository()
+// const turnRepository = new TurnMySQLRepository()
 
 export class GameService {
+    constructor(
+        private _gameRepository: GameRepository,
+        private _turnRepository: TurnRepository
+    ) {}
+    
     async startNewGame() {
         const now = new Date()
 
@@ -16,7 +27,7 @@ export class GameService {
             await conn.beginTransaction()
 
             // ゲームを保存する
-            const game = await gameRepository.save(conn, new Game(undefined, now))
+            const game = await this._gameRepository.save(conn, new Game(undefined, now))
             if (!game.id) {
                 throw new Error('game.id not exist')
             }
@@ -27,7 +38,7 @@ export class GameService {
             const turn = firstTurn(game.id, now)
 
             // 最初のターンを保存する
-            await turnRepository.save(conn, turn)
+            await this._turnRepository.save(conn, turn)
 
             await conn.commit()
         } finally {
